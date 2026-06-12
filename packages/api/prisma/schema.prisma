@@ -1,0 +1,346 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  displayName      String?
+  avatarUrl        String?
+  passwordHash     String?
+  oauthProvider    String?
+  oauthId          String?
+  role             Role     @default(VISITOR)
+  reputationScore  Int      @default(0)
+  spurtiPoints     Int      @default(0)
+  preferredLanguage String?
+  phaseData        Json?
+  startDate        DateTime @default(now())
+  isShadowBanned   Boolean  @default(false)
+  is2FAEnabled     Boolean  @default(false)
+
+  // Relations
+  questions     Question[] @relation("UserQuestions")
+  answers       Answer[]   @relation("UserAnswers")
+  votes         Vote[]
+  comments      Comment[]
+  flags         Flag[]
+  badges        UserBadge[]
+  notifications Notification[]
+  editHistory   EditHistory[]
+  webhooks      WebhookSubscription[]
+  ticketsRaised Ticket[]  @relation("TicketsRaisedByUser")
+  ticketsAssigned Ticket[] @relation("TicketsAssignedToUser")
+}
+
+enum Role {
+  VISITOR
+  CONTRIBUTOR
+  EXPERT
+  MODERATOR
+  ADMIN
+}
+
+model Question {
+  id               String   @id @default(uuid())
+  authorId         String
+  title            String
+  bodyMarkdown     String
+  bodyHtml         String?
+  status           QuestionStatus @default(OPEN)
+  canonicalQuestionId String?  // duplicate linking
+  voteScore        Int      @default(0)
+  viewCount        Int      @default(0)
+  detectedLanguage String?
+  extractedKeyTerms Json?
+  phaseLevel       PhaseLevel @default(BEGINNER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  author   User @relation("UserQuestions", fields: [authorId], references: [id])
+  answers  Answer[]
+  tags     QuestionTag[]
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  ACCEPTED
+  DUPLICATE
+  LOCKED
+}
+
+enum PhaseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model Answer {
+  id               String   @id @default(uuid())
+  questionId       String
+  authorId         String
+  bodyMarkdown     String
+  bodyHtml         String?
+  shortFormSummary String?
+  voteScore        Int      @default(0)
+  confidenceScore  Float    @default(0)
+  compositeBestScore Float  @default(0)
+  isAccepted       Boolean  @default(false)
+  isExpertVerified Boolean  @default(false)
+  isAIGenerated    Boolean  @default(false)
+  aiModelUsed      String?
+  status           AnswerStatus @default(PUBLISHED)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id])
+  author   User    @relation("UserAnswers", fields: [authorId], references: [id])
+}
+
+enum AnswerStatus {
+  PUBLISHED
+  FLAGGED
+  REMOVED
+  PENDING_REVIEW
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  userId    String
+  targetId  String   // question or answer UUID
+  targetType VoteTarget
+  voteType  VoteType
+  weight    Float    @default(1)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum VoteTarget {
+  QUESTION
+  ANSWER
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+model Tag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  parentTagId String?
+  questionCount Int @default(0)
+
+  parentTag Tag? @relation("TagHierarchy", fields: [parentTagId], references: [id])
+  children  Tag[] @relation("TagHierarchy")
+  questions QuestionTag[]
+}
+
+model QuestionTag {
+  questionId String
+  tagId      String
+
+  question Question @relation(fields: [questionId], references: [id])
+  tag      Tag      @relation(fields: [tagId], references: [id])
+
+  @@id([questionId, tagId])
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  authorId    String
+  targetId    String   // question or answer
+  targetType  CommentTarget
+  body        String
+  createdAt   DateTime @default(now())
+
+  author User @relation(fields: [authorId], references: [id])
+}
+
+enum CommentTarget {
+  QUESTION
+  ANSWER
+}
+
+model Flag {
+  id          String   @id @default(uuid())
+  reporterId  String
+  targetId    String
+  targetType  FlagTarget
+  reason      FlagReason
+  details     String?
+  status      FlagStatus @default(PENDING)
+  reviewedBy  String?
+  createdAt   DateTime @default(now())
+
+  reporter User @relation(fields: [reporterId], references: [id])
+}
+
+enum FlagTarget {
+  QUESTION
+  ANSWER
+  COMMENT
+}
+
+enum FlagReason {
+  SPAM
+  INAPPROPRIATE
+  OFF_TOPIC
+  DUPLICATE
+  LOW_QUALITY
+}
+
+enum FlagStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  criteriaType String
+  criteriaThreshold Int
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  userId   String
+  badgeId  String
+  awardedAt DateTime @default(now())
+
+  user  User @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  metadata  Json?
+  isRead    Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum NotificationType {
+  ANSWER
+  VOTE
+  BADGE
+  MODERATION
+  SYSTEM
+}
+
+model EditHistory {
+  id          String   @id @default(uuid())
+  targetId    String
+  targetType  EditTarget
+  editorId    String
+  previousBody String
+  newBody      String
+  editReason   String?
+  createdAt    DateTime @default(now())
+
+  editor User @relation(fields: [editorId], references: [id])
+}
+
+enum EditTarget {
+  QUESTION
+  ANSWER
+}
+
+model AISuggestion {
+  id        String   @id @default(uuid())
+  type      AISuggestionType
+  targetId  String?
+  suggestedContent String
+  status    AISuggestionStatus @default(PENDING)
+  reviewedBy String?
+  createdAt DateTime @default(now())
+}
+
+enum AISuggestionType {
+  ANSWER_IMPROVEMENT
+  NEW_FAQ
+  GAP_FILL
+}
+
+enum AISuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  MODIFIED
+}
+
+model WebhookSubscription {
+  id        String   @id @default(uuid())
+  ownerId   String
+  endpointUrl String
+  secret    String?
+  eventTypes Json   // array of event name strings
+  isActive  Boolean @default(true)
+
+  owner User @relation(fields: [ownerId], references: [id])
+}
+
+// ==================== NEW UNIFIED MODELS ====================
+
+model FAQ {
+  id          String   @id @default(uuid())
+  category    FAQCategory
+  question    String
+  answer      String
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation to tickets that reference this FAQ
+  linkedTickets Ticket[] @relation("LinkedFAQ")
+}
+
+enum FAQCategory {
+  REGISTRATION
+  TECHNICAL
+  EVENTS
+  GENERAL
+}
+
+model Ticket {
+  id            String   @id @default(uuid())
+  raisedById    String
+  assignedToId  String?
+  questionText  String
+  attachmentUrl String?
+  status        TicketStatus @default(OPEN)
+  linkedFaqId   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  raisedBy User @relation("TicketsRaisedByUser", fields: [raisedById], references: [id])
+  assignedTo User? @relation("TicketsAssignedToUser", fields: [assignedToId], references: [id])
+  linkedFaq FAQ? @relation("LinkedFAQ", fields: [linkedFaqId], references: [id])
+}
+
+enum TicketStatus {
+  OPEN
+  CLAIMED
+  RESOLVED
+}

@@ -1,0 +1,51 @@
+
+> faq-web@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.4
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/17) ...
+   Generating static pages (4/17) 
+   Generating static pages (8/17) 
+   Generating static pages (12/17) 
+ ✓ Generating static pages (17/17)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                               Size     First Load JS
+┌ ○ /                                     497 B          87.6 kB
+├ ○ /_not-found                           873 B            88 kB
+├ ○ /admin                                5.17 kB        92.3 kB
+├ ○ /ask                                  2.64 kB         100 kB
+├ ○ /dashboard                            4.3 kB         98.2 kB
+├ ○ /experts                              1.57 kB        95.5 kB
+├ ○ /faqs                                 2.68 kB         100 kB
+├ ○ /issues                               2.54 kB        99.9 kB
+├ ○ /leaderboard                          1.8 kB         95.7 kB
+├ ○ /notifications                        3.84 kB        90.9 kB
+├ ○ /privacy                              2.38 kB        96.3 kB
+├ ƒ /question/[id]                        4.38 kB        98.3 kB
+├ ○ /raise                                3.13 kB         100 kB
+├ ○ /settings                             4.49 kB        91.6 kB
+├ ○ /terms                                2.31 kB        89.4 kB
+├ ○ /topics                               3.49 kB        90.6 kB
+└ ƒ /user/[id]                            3.62 kB        97.6 kB
++ First Load JS shared by all             87.1 kB
+  ├ chunks/1dd3208c-e00645214bf967ec.js   53.6 kB
+  ├ chunks/286-5b275e499714508b.js        31.5 kB
+  └ other shared chunks (total)           1.96 kB
+
+Route (pages)                             Size     First Load JS
+─ ƒ /api/auth/[...nextauth]               0 B            79.3 kB
++ First Load JS shared by all             79.3 kB
+  ├ chunks/framework-3664cab31236a9fa.js  45.2 kB
+  ├ chunks/main-4df23daf95ffab6e.js       32.2 kB
+  └ other shared chunks (total)           1.93 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

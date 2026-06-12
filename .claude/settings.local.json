@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p apps/web apps/widget packages/api packages/shared packages/config)",
+      "Bash(npm init *)",
+      "Bash(npx turbo *)",
+      "Skill(setup-structure)",
+      "Bash(echo '{ \"packageManager\": \"npm\" }')",
+      "Bash(npm install *)"
+    ]
+  }
+}
