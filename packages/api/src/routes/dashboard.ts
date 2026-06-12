@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
-import { requireAuth } from '../auth-utils';
+import { requireAuth } from '../auth-utils.js';
 
 const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
   // ----- User Dashboard (authenticated users) --------------------------------
