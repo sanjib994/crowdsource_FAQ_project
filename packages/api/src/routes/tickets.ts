@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
 import { z } from 'zod';
-import { requireAuth } from '../auth-utils';
+import { requireAuth } from '../auth-utils.js';
 
 // Validation schemas
 const createTicketSchema = z.object({
