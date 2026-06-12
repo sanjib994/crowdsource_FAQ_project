@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { requireAuth } from '../auth-utils';
-import { castVote } from '../voting';
+import { requireAuth } from '../auth-utils.js';
+import { castVote } from '../voting.js';
 
 const voteSchema = z.object({
   targetId: z.string().uuid(),
